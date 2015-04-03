@@ -1,0 +1,7 @@
+= Bluetooth GATT
+
+This project was created to support various http://thenewcircle.com/training/android/[NewCircle Android Training] courses.
+
+This application must be run two device running Android 5.0+:
+* The first (peripheral) must support multiple advertisement features.
+* The second (client) must have basic Bluetooth LE support.
