@@ -41,10 +41,11 @@ public class PeripheralActivity extends Activity
         list.setAdapter(mConnectedDevicesAdapter);
 
         /*
-         * Bluetooth in Android 4.3+ is accessed via the BluetoothManager, rather than
-         * the old static BluetoothAdapter.getInstance()
+         * Bluetooth in Android 4.3+ is accessed via the BluetoothManager,
+         * rather than the old static BluetoothAdapter.getInstance()
          */
-        BluetoothManager manager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        BluetoothManager manager =
+                (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = manager.getAdapter();
     }
 
@@ -57,29 +58,34 @@ public class PeripheralActivity extends Activity
          */
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
             //Bluetooth is disabled
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            Intent enableBtIntent =
+                    new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivity(enableBtIntent);
             finish();
             return;
         }
 
         /*
-         * Check for Bluetooth LE Support.  In production, our manifest entry will keep this
-         * from installing on these devices, but this will allow test devices or other
-         * sideloads to report whether or not the feature exists.
+         * Check for Bluetooth LE Support.  In production, our manifest entry
+         * will keep this from installing on these devices, but this will
+         * allow test devices or other sideloads to report whether or not
+         * the feature exists.
          */
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this, "No LE Support.", Toast.LENGTH_SHORT).show();
+        if (!getPackageManager()
+                .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Toast.makeText(this, "No LE Support.", Toast.LENGTH_SHORT)
+                    .show();
             finish();
             return;
         }
 
         /*
-         * Check for advertising support. Not all devices are enabled to advertise
-         * Bluetooth LE data.
+         * Check for advertising support. Not all devices are enabled to
+         * advertise Bluetooth LE data.
          */
         if (!mBluetoothAdapter.isMultipleAdvertisementSupported()) {
-            Toast.makeText(this, "No Advertising Support.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No Advertising Support.", Toast.LENGTH_SHORT)
+                    .show();
             finish();
             return;
         }
@@ -116,7 +122,9 @@ public class PeripheralActivity extends Activity
                 .addServiceUuid(new ParcelUuid(DeviceProfile.SERVICE_UUID))
                 .build();
 
-        mBluetoothLeAdvertiser.startAdvertising(settings, data, mAdvertiseCallback);
+        mBluetoothLeAdvertiser.startAdvertising(settings,
+                data,
+                mAdvertiseCallback);
     }
 
     /*
@@ -171,6 +179,7 @@ public class PeripheralActivity extends Activity
 
     @Override
     public void onTimeOffsetUpdated() {
-        Toast.makeText(this, "Time Offset Updated", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Time Offset Updated", Toast.LENGTH_SHORT)
+                .show();
     }
 }

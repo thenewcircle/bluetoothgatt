@@ -9,6 +9,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import static com.example.android.bluetoothgatt.DeviceProfile.*;
+
 /*
  * Callback handles GATT client events, such as results from
  * reading or writing a characteristic value on the server.
@@ -30,11 +32,13 @@ public class TimeClientCallback extends BluetoothGattCallback {
     }
 
     @Override
-    public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+    public void onConnectionStateChange(BluetoothGatt gatt,
+                                        int status,
+                                        int newState) {
         super.onConnectionStateChange(gatt, status, newState);
         Log.d(TAG, "onConnectionStateChange "
-                + DeviceProfile.getStatusDescription(status) + " "
-                + DeviceProfile.getStateDescription(newState));
+                + getStatusDescription(status) + " "
+                + getStateDescription(newState));
 
         if (newState == BluetoothProfile.STATE_CONNECTED) {
             gatt.discoverServices();
@@ -49,9 +53,10 @@ public class TimeClientCallback extends BluetoothGattCallback {
         for (BluetoothGattService service : gatt.getServices()) {
             Log.d(TAG, "Service: "+service.getUuid());
 
-            if (DeviceProfile.SERVICE_UUID.equals(service.getUuid())) {
+            if (SERVICE_UUID.equals(service.getUuid())) {
                 //Read the current characteristic's value
-                gatt.readCharacteristic(service.getCharacteristic(DeviceProfile.CHARACTERISTIC_ELAPSED_UUID));
+                gatt.readCharacteristic(service
+                        .getCharacteristic(CHARACTERISTIC_ELAPSED_UUID));
             }
         }
     }
@@ -61,9 +66,10 @@ public class TimeClientCallback extends BluetoothGattCallback {
                                      BluetoothGattCharacteristic characteristic,
                                      int status) {
         super.onCharacteristicRead(gatt, characteristic, status);
-        final int charValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
+        final int charValue = characteristic
+                .getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
 
-        if (DeviceProfile.CHARACTERISTIC_ELAPSED_UUID.equals(characteristic.getUuid())) {
+        if (CHARACTERISTIC_ELAPSED_UUID.equals(characteristic.getUuid())) {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -75,7 +81,7 @@ public class TimeClientCallback extends BluetoothGattCallback {
             gatt.setCharacteristicNotification(characteristic, true);
         }
 
-        if (DeviceProfile.CHARACTERISTIC_OFFSET_UUID.equals(characteristic.getUuid())) {
+        if (CHARACTERISTIC_OFFSET_UUID.equals(characteristic.getUuid())) {
             Log.d(TAG, "Current time offset: "+charValue);
             mHandler.post(new Runnable() {
                 @Override
@@ -91,7 +97,8 @@ public class TimeClientCallback extends BluetoothGattCallback {
                                         BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
         Log.i(TAG, "Notification of time characteristic changed on server.");
-        final int charValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
+        final int charValue = characteristic
+                .getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
         mHandler.post(new Runnable() {
             @Override
             public void run() {

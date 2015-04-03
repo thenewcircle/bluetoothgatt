@@ -16,6 +16,8 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.android.bluetoothgatt.DeviceProfile.*;
+
 /*
  * Callback handles all incoming requests from GATT clients.
  * From connections to read/write requests.
@@ -47,22 +49,27 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
      * characteristics that should be exposed
      */
     public void initServer(Context context) {
-        BluetoothManager manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        BluetoothManager manager =(BluetoothManager) context
+                .getSystemService(Context.BLUETOOTH_SERVICE);
         mGattServer = manager.openGattServer(context, this);
 
-        BluetoothGattService service =new BluetoothGattService(DeviceProfile.SERVICE_UUID,
+        BluetoothGattService service =
+                new BluetoothGattService(SERVICE_UUID,
                 BluetoothGattService.SERVICE_TYPE_PRIMARY);
 
         BluetoothGattCharacteristic elapsedCharacteristic =
-                new BluetoothGattCharacteristic(DeviceProfile.CHARACTERISTIC_ELAPSED_UUID,
+                new BluetoothGattCharacteristic(CHARACTERISTIC_ELAPSED_UUID,
                         //Read-only characteristic, supports notifications
-                        BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+                        BluetoothGattCharacteristic.PROPERTY_READ
+                                | BluetoothGattCharacteristic.PROPERTY_NOTIFY,
                         BluetoothGattCharacteristic.PERMISSION_READ);
         BluetoothGattCharacteristic offsetCharacteristic =
-                new BluetoothGattCharacteristic(DeviceProfile.CHARACTERISTIC_OFFSET_UUID,
+                new BluetoothGattCharacteristic(CHARACTERISTIC_OFFSET_UUID,
                         //Read+write permissions
-                        BluetoothGattCharacteristic.PROPERTY_READ | BluetoothGattCharacteristic.PROPERTY_WRITE,
-                        BluetoothGattCharacteristic.PERMISSION_READ | BluetoothGattCharacteristic.PERMISSION_WRITE);
+                        BluetoothGattCharacteristic.PROPERTY_READ
+                                | BluetoothGattCharacteristic.PROPERTY_WRITE,
+                        BluetoothGattCharacteristic.PERMISSION_READ
+                                | BluetoothGattCharacteristic.PERMISSION_WRITE);
 
         service.addCharacteristic(elapsedCharacteristic);
         service.addCharacteristic(offsetCharacteristic);
@@ -84,11 +91,12 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
     /** Server Event Callback Methods */
 
     @Override
-    public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-        super.onConnectionStateChange(device, status, newState);
+    public void onConnectionStateChange(BluetoothDevice device,
+                                        int status,
+                                        int newState) {
         Log.i(TAG, "onConnectionStateChange "
-                + DeviceProfile.getStatusDescription(status) + " "
-                + DeviceProfile.getStateDescription(newState));
+                + getStatusDescription(status) + " "
+                + getStateDescription(newState));
 
         if (newState == BluetoothProfile.STATE_CONNECTED) {
             postDeviceChange(device, true);
@@ -100,13 +108,13 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
 
     @Override
     public void onCharacteristicReadRequest(BluetoothDevice device,
-                                            int requestId,
-                                            int offset,
-                                            BluetoothGattCharacteristic characteristic) {
-        super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
-        Log.i(TAG, "onCharacteristicReadRequest " + characteristic.getUuid().toString());
+                                int requestId,
+                                int offset,
+                                BluetoothGattCharacteristic characteristic) {
+        Log.i(TAG, "onCharacteristicReadRequest "
+                + characteristic.getUuid().toString());
 
-        if (DeviceProfile.CHARACTERISTIC_ELAPSED_UUID.equals(characteristic.getUuid())) {
+        if (CHARACTERISTIC_ELAPSED_UUID.equals(characteristic.getUuid())) {
             mGattServer.sendResponse(device,
                     requestId,
                     BluetoothGatt.GATT_SUCCESS,
@@ -114,12 +122,12 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
                     getStoredValue());
         }
 
-        if (DeviceProfile.CHARACTERISTIC_OFFSET_UUID.equals(characteristic.getUuid())) {
+        if (CHARACTERISTIC_OFFSET_UUID.equals(characteristic.getUuid())) {
             mGattServer.sendResponse(device,
                     requestId,
                     BluetoothGatt.GATT_SUCCESS,
                     0,
-                    DeviceProfile.bytesFromInt(mTimeOffset));
+                    bytesFromInt(mTimeOffset));
         }
 
         /*
@@ -134,17 +142,17 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
 
     @Override
     public void onCharacteristicWriteRequest(BluetoothDevice device,
-                                             int requestId,
-                                             BluetoothGattCharacteristic characteristic,
-                                             boolean preparedWrite,
-                                             boolean responseNeeded,
-                                             int offset,
-                                             byte[] value) {
-        super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
-        Log.i(TAG, "onCharacteristicWriteRequest " + characteristic.getUuid().toString());
+                                 int requestId,
+                                 BluetoothGattCharacteristic characteristic,
+                                 boolean preparedWrite,
+                                 boolean responseNeeded,
+                                 int offset,
+                                 byte[] value) {
+        Log.i(TAG, "onCharacteristicWriteRequest "
+                + characteristic.getUuid().toString());
 
-        if (DeviceProfile.CHARACTERISTIC_OFFSET_UUID.equals(characteristic.getUuid())) {
-            int newOffset = DeviceProfile.unsignedIntFromBytes(value);
+        if (CHARACTERISTIC_OFFSET_UUID.equals(characteristic.getUuid())) {
+            int newOffset = unsignedIntFromBytes(value);
             setStoredValue(newOffset);
 
             if (responseNeeded) {
@@ -167,7 +175,8 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
         }
     }
 
-    private void postDeviceChange(final BluetoothDevice device, final boolean toAdd) {
+    private void postDeviceChange(final BluetoothDevice device,
+                                  final boolean toAdd) {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -201,21 +210,28 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
 
     public void notifyConnectedDevices() {
         for (BluetoothDevice device : mConnectedDevices) {
-            BluetoothGattCharacteristic readCharacteristic = mGattServer.getService(DeviceProfile.SERVICE_UUID)
-                    .getCharacteristic(DeviceProfile.CHARACTERISTIC_ELAPSED_UUID);
+            BluetoothGattCharacteristic readCharacteristic =
+                    mGattServer.getService(SERVICE_UUID)
+                    .getCharacteristic(CHARACTERISTIC_ELAPSED_UUID);
             readCharacteristic.setValue(getStoredValue());
-            mGattServer.notifyCharacteristicChanged(device, readCharacteristic, false);
+
+            mGattServer.notifyCharacteristicChanged(device,
+                    readCharacteristic,
+                    false);
         }
     }
 
-    /** Synchronized access to stored value. LE callbacks come from different threads. */
+    /**
+     * Synchronized access to stored value.
+     * LE callbacks come from different threads.
+     */
 
     private Object mLock = new Object();
     private int mTimeOffset;
 
     private byte[] getStoredValue() {
         synchronized (mLock) {
-            return DeviceProfile.getShiftedTimeValue(mTimeOffset);
+            return getShiftedTimeValue(mTimeOffset);
         }
     }
 

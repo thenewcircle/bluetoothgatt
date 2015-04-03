@@ -37,6 +37,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import static com.example.android.bluetoothgatt.DeviceProfile.*;
+
 public class ClientActivity extends Activity
         implements TimeClientCallback.ClientStatusListener {
     private static final String TAG = ClientActivity.class.getSimpleName();
@@ -63,10 +65,11 @@ public class ClientActivity extends Activity
         updateDateText(0);
 
         /*
-         * Bluetooth in Android 4.3+ is accessed via the BluetoothManager, rather than
-         * the old static BluetoothAdapter.getInstance()
+         * Bluetooth in Android 4.3+ is accessed via the BluetoothManager,
+         * rather than the old static BluetoothAdapter.getInstance()
          */
-        mBluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        mBluetoothManager =
+                (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
 
         mDevices = new SparseArray<BluetoothDevice>();
@@ -82,19 +85,23 @@ public class ClientActivity extends Activity
          */
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
             //Bluetooth is disabled
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            Intent enableBtIntent =
+                    new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivity(enableBtIntent);
             finish();
             return;
         }
 
         /*
-         * Check for Bluetooth LE Support.  In production, our manifest entry will keep this
-         * from installing on these devices, but this will allow test devices or other
-         * sideloads to report whether or not the feature exists.
+         * Check for Bluetooth LE Support.  In production, our manifest entry
+         * will keep this from installing on these devices, but this will
+         * allow test devices or other sideloads to report whether or not
+         * the feature exists.
          */
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this, "No LE Support.", Toast.LENGTH_SHORT).show();
+        if (!getPackageManager()
+                .hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Toast.makeText(this, "No LE Support.", Toast.LENGTH_SHORT)
+                    .show();
             finish();
             return;
         }
@@ -136,10 +143,13 @@ public class ClientActivity extends Activity
                 BluetoothDevice device = mDevices.get(item.getItemId());
                 Log.i(TAG, "Connecting to " + device.getName());
                 /*
-                 * Make a connection with the device using the special LE-specific
-                 * connectGatt() method, passing in a callback for GATT events
+                 * Make a connection with the device using the special
+                 * LE-specific connectGatt() method, passing in a callback
+                 * for GATT events
                  */
-                mConnectedGatt = device.connectGatt(this, false, mGattCallback);
+                mConnectedGatt = device.connectGatt(this,
+                        false,
+                        mGattCallback);
                 return super.onOptionsItemSelected(item);
         }
     }
@@ -151,24 +161,28 @@ public class ClientActivity extends Activity
     public void onUpdateClick(View v) {
         if (mConnectedGatt != null) {
             final Calendar now = Calendar.getInstance();
-            TimePickerDialog dialog = new TimePickerDialog(this, new TimePickerDialog.OnTimeSetListener() {
-                @Override
-                public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
-                    now.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                    now.set(Calendar.MINUTE, minute);
-                    now.set(Calendar.SECOND, 0);
-                    now.set(Calendar.MILLISECOND, 0);
+            TimePickerDialog dialog = new TimePickerDialog(this,
+                    new TimePickerDialog.OnTimeSetListener() {
+                        @Override
+                        public void onTimeSet(TimePicker view,
+                                              int hourOfDay,
+                                              int minute) {
+                            now.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                            now.set(Calendar.MINUTE, minute);
+                            now.set(Calendar.SECOND, 0);
+                            now.set(Calendar.MILLISECOND, 0);
 
-                    BluetoothGattCharacteristic characteristic = mConnectedGatt
-                            .getService(DeviceProfile.SERVICE_UUID)
-                            .getCharacteristic(DeviceProfile.CHARACTERISTIC_OFFSET_UUID);
-                    byte[] value = DeviceProfile.bytesFromInt((int)(now.getTimeInMillis()/1000));
-                    Log.d(TAG, "Writing value of size "+value.length);
-                    characteristic.setValue(value);
+                            BluetoothGattCharacteristic characteristic =
+                                    mConnectedGatt.getService(SERVICE_UUID)
+                                    .getCharacteristic(CHARACTERISTIC_OFFSET_UUID);
+                            int selected = (int) (now.getTimeInMillis() / 1000);
+                            byte[] value = bytesFromInt(selected);
+                            Log.d(TAG, "Writing value of size " + value.length);
+                            characteristic.setValue(value);
 
-                    mConnectedGatt.writeCharacteristic(characteristic);
-                }
-            }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), false);
+                            mConnectedGatt.writeCharacteristic(characteristic);
+                        }
+                    }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), false);
             dialog.show();
         }
     }
@@ -179,8 +193,8 @@ public class ClientActivity extends Activity
     public void onGetOffsetClick(View v) {
         if (mConnectedGatt != null) {
             BluetoothGattCharacteristic characteristic = mConnectedGatt
-                    .getService(DeviceProfile.SERVICE_UUID)
-                    .getCharacteristic(DeviceProfile.CHARACTERISTIC_OFFSET_UUID);
+                    .getService(SERVICE_UUID)
+                    .getCharacteristic(CHARACTERISTIC_OFFSET_UUID);
 
             mConnectedGatt.readCharacteristic(characteristic);
             mCurrentOffset.setText("---");
@@ -194,7 +208,7 @@ public class ClientActivity extends Activity
     private void startScan() {
         //Scan for devices advertising our custom service
         ScanFilter scanFilter = new ScanFilter.Builder()
-                .setServiceUuid(new ParcelUuid(DeviceProfile.SERVICE_UUID))
+                .setServiceUuid(new ParcelUuid(SERVICE_UUID))
                 .build();
         ArrayList<ScanFilter> filters = new ArrayList<ScanFilter>();
         filters.add(scanFilter);
@@ -202,7 +216,8 @@ public class ClientActivity extends Activity
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
                 .build();
-        mBluetoothAdapter.getBluetoothLeScanner().startScan(filters, settings, mScanCallback);
+        mBluetoothAdapter.getBluetoothLeScanner()
+                .startScan(filters, settings, mScanCallback);
     }
 
     /*
@@ -241,7 +256,8 @@ public class ClientActivity extends Activity
 
         private void processResult(ScanResult result) {
             BluetoothDevice device = result.getDevice();
-            Log.i(TAG, "New LE Device: " + device.getName() + " @ " + result.getRssi());
+            Log.i(TAG, "New LE Device: "
+                    + device.getName() + " @ " + result.getRssi());
             //Add it to the collection
             mDevices.put(device.hashCode(), device);
             //Update the overflow menu
