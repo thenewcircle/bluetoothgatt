@@ -2,4 +2,8 @@
     <string name="app_name">BluetoothGatt</string>
     <string name="label_peripheral">GATT Peripheral</string>
     <string name="label_client">GATT Client</string>
+    <string name="action_scan">Scan</string>
+    <string name="button_time">Update Server Time Offset</string>
+    <string name="button_offset">Get Current Time Offset</string>
+    <string name="text_label">Seconds Passed Since:</string>
 </resources>

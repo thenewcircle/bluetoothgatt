@@ -37,7 +37,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class ClientActivity extends Activity {
+public class ClientActivity extends Activity
+        implements TimeClientCallback.ClientStatusListener {
     private static final String TAG = ClientActivity.class.getSimpleName();
 
     private BluetoothManager mBluetoothManager;
@@ -46,8 +47,7 @@ public class ClientActivity extends Activity {
     private SparseArray<BluetoothDevice> mDevices;
 
     private BluetoothGatt mConnectedGatt;
-
-    private Handler mHandler = new Handler();
+    private TimeClientCallback mGattCallback;
 
     /* Client UI elements */
     private TextView mLatestValue;
@@ -70,6 +70,7 @@ public class ClientActivity extends Activity {
         mBluetoothAdapter = mBluetoothManager.getAdapter();
 
         mDevices = new SparseArray<BluetoothDevice>();
+        mGattCallback = new TimeClientCallback(this);
     }
 
     @Override
@@ -186,12 +187,6 @@ public class ClientActivity extends Activity {
         }
     }
 
-    private void updateDateText(long offset) {
-        Date date = new Date(offset);
-        String dateString = DateFormat.getDateTimeInstance().format(date);
-        mCurrentOffset.setText(dateString);
-    }
-
     /*
      * Begin a scan for new servers that advertise our
      * matching service.
@@ -256,80 +251,21 @@ public class ClientActivity extends Activity {
         }
     };
 
-    /*
-     * Callback handles GATT client events, such as results from
-     * reading or writing a characteristic value on the server.
-     */
-    private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            super.onConnectionStateChange(gatt, status, newState);
-            Log.d(TAG, "onConnectionStateChange "
-                    +DeviceProfile.getStatusDescription(status)+" "
-                    +DeviceProfile.getStateDescription(newState));
+    /** UI Handlers for events from the GATT client instance */
 
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                gatt.discoverServices();
-            }
-        }
+    @Override
+    public void onTimeValueChanged(int value) {
+        mLatestValue.setText(String.valueOf(value));
+    }
 
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            super.onServicesDiscovered(gatt, status);
-            Log.d(TAG, "onServicesDiscovered:");
+    @Override
+    public void onTimeOffsetChanged(long offset) {
+        updateDateText(offset);
+    }
 
-            for (BluetoothGattService service : gatt.getServices()) {
-                Log.d(TAG, "Service: "+service.getUuid());
-
-                if (DeviceProfile.SERVICE_UUID.equals(service.getUuid())) {
-                    //Read the current characteristic's value
-                    gatt.readCharacteristic(service.getCharacteristic(DeviceProfile.CHARACTERISTIC_ELAPSED_UUID));
-                }
-            }
-        }
-
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic,
-                                         int status) {
-            super.onCharacteristicRead(gatt, characteristic, status);
-            final int charValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
-
-            if (DeviceProfile.CHARACTERISTIC_ELAPSED_UUID.equals(characteristic.getUuid())) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mLatestValue.setText(String.valueOf(charValue));
-                    }
-                });
-
-                //Register for further updates as notifications
-                gatt.setCharacteristicNotification(characteristic, true);
-            }
-
-            if (DeviceProfile.CHARACTERISTIC_OFFSET_UUID.equals(characteristic.getUuid())) {
-                Log.d(TAG, "Current time offset: "+charValue);
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateDateText((long)charValue * 1000);
-                    }
-                });
-            }
-        }
-
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
-            super.onCharacteristicChanged(gatt, characteristic);
-            Log.i(TAG, "Notification of time characteristic changed on server.");
-            final int charValue = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    mLatestValue.setText(String.valueOf(charValue));
-                }
-            });
-        }
-    };
+    private void updateDateText(long offset) {
+        Date date = new Date(offset);
+        String dateString = DateFormat.getDateTimeInstance().format(date);
+        mCurrentOffset.setText(dateString);
+    }
 }
