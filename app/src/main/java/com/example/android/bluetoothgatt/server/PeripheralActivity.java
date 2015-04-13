@@ -19,7 +19,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import com.example.android.bluetoothgatt.TimerGattProfile;
+import static com.example.android.bluetoothgatt.TimerGattProfile.*;
 
 public class PeripheralActivity extends Activity
         implements TimeServerCallback.ServerStatusListener {
@@ -121,7 +121,7 @@ public class PeripheralActivity extends Activity
 
         AdvertiseData data = new AdvertiseData.Builder()
                 .setIncludeDeviceName(true)
-                .addServiceUuid(new ParcelUuid(TimerGattProfile.UUID_SERVICE_TIMER))
+                .addServiceUuid(new ParcelUuid(UUID_SERVICE_TIMER))
                 .build();
 
         mBluetoothLeAdvertiser.startAdvertising(settings,
