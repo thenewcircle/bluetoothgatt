@@ -191,12 +191,12 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
     };
 
     public void notifyConnectedDevices() {
-        for (BluetoothDevice device : mConnectedDevices) {
-            BluetoothGattCharacteristic readCharacteristic =
-                    mGattServer.getService(UUID_SERVICE_TIMER)
-                    .getCharacteristic(UUID_CHARACTERISTIC_ELAPSED);
-            readCharacteristic.setValue(getStoredValue());
+        BluetoothGattCharacteristic readCharacteristic =
+                mGattServer.getService(UUID_SERVICE_TIMER)
+                        .getCharacteristic(UUID_CHARACTERISTIC_ELAPSED);
+        readCharacteristic.setValue(getStoredValue());
 
+        for (BluetoothDevice device : mConnectedDevices) {
             mGattServer.notifyCharacteristicChanged(device,
                     readCharacteristic,
                     false);
