@@ -157,30 +157,38 @@ public class ClientActivity extends Activity
         if (mConnectedGatt != null) {
             final Calendar now = Calendar.getInstance();
             TimePickerDialog dialog = new TimePickerDialog(this,
-                    new TimePickerDialog.OnTimeSetListener() {
-                        @Override
-                        public void onTimeSet(TimePicker view,
-                                              int hourOfDay,
-                                              int minute) {
-                            now.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                            now.set(Calendar.MINUTE, minute);
-                            now.set(Calendar.SECOND, 0);
-                            now.set(Calendar.MILLISECOND, 0);
-
-                            BluetoothGattCharacteristic characteristic =
-                                    mConnectedGatt.getService(UUID_SERVICE_TIMER)
-                                    .getCharacteristic(UUID_CHARACTERISTIC_OFFSET);
-                            int selected = (int) (now.getTimeInMillis() / 1000);
-                            byte[] value = bytesFromInt(selected);
-                            Log.d(TAG, "Writing value of size " + value.length);
-                            characteristic.setValue(value);
-
-                            mConnectedGatt.writeCharacteristic(characteristic);
-                        }
-                    }, now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), false);
+                    mTimeSetListener,
+                    now.get(Calendar.HOUR_OF_DAY),
+                    now.get(Calendar.MINUTE),
+                    false);
             dialog.show();
         }
     }
+
+    private TimePickerDialog.OnTimeSetListener mTimeSetListener =
+            new TimePickerDialog.OnTimeSetListener() {
+        @Override
+        public void onTimeSet(TimePicker view,
+                              int hourOfDay,
+                              int minute) {
+            final Calendar now = Calendar.getInstance();
+            now.set(Calendar.HOUR_OF_DAY, hourOfDay);
+            now.set(Calendar.MINUTE, minute);
+            now.set(Calendar.SECOND, 0);
+            now.set(Calendar.MILLISECOND, 0);
+
+            BluetoothGattCharacteristic characteristic =
+                    mConnectedGatt.getService(UUID_SERVICE_TIMER)
+                            .getCharacteristic(UUID_CHARACTERISTIC_OFFSET);
+
+            int selected = (int) (now.getTimeInMillis() / 1000);
+            byte[] value = bytesFromInt(selected);
+            Log.d(TAG, "Writing value of size " + value.length);
+            characteristic.setValue(value);
+
+            mConnectedGatt.writeCharacteristic(characteristic);
+        }
+    };
 
     /*
      * Retrieve the current value of the time offset

@@ -15,6 +15,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static com.example.android.bluetoothgatt.TimerGattProfile.*;
 
@@ -59,17 +60,10 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
 
         BluetoothGattCharacteristic elapsedCharacteristic =
                 new BluetoothGattCharacteristic(UUID_CHARACTERISTIC_ELAPSED,
-                        //Read-only characteristic, supports notifications
-                        BluetoothGattCharacteristic.PROPERTY_READ
-                                | BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-                        BluetoothGattCharacteristic.PERMISSION_READ);
+                        PROPERTIES_ELAPSED, PERMISSIONS_ELAPSED);
         BluetoothGattCharacteristic offsetCharacteristic =
                 new BluetoothGattCharacteristic(UUID_CHARACTERISTIC_OFFSET,
-                        //Read+write permissions
-                        BluetoothGattCharacteristic.PROPERTY_READ
-                                | BluetoothGattCharacteristic.PROPERTY_WRITE,
-                        BluetoothGattCharacteristic.PERMISSION_READ
-                                | BluetoothGattCharacteristic.PERMISSION_WRITE);
+                        PROPERTIES_OFFSET, PERMISSIONS_OFFSET);
 
         service.addCharacteristic(elapsedCharacteristic);
         service.addCharacteristic(offsetCharacteristic);
@@ -111,33 +105,23 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
                                 int requestId,
                                 int offset,
                                 BluetoothGattCharacteristic characteristic) {
+        final UUID characteristicUuid = characteristic.getUuid();
         Log.i(TAG, "onCharacteristicReadRequest "
-                + characteristic.getUuid().toString());
+                + characteristicUuid.toString());
 
-        if (UUID_CHARACTERISTIC_ELAPSED.equals(characteristic.getUuid())) {
-            mGattServer.sendResponse(device,
-                    requestId,
-                    BluetoothGatt.GATT_SUCCESS,
-                    0,
-                    getStoredValue());
-        }
-
-        if (UUID_CHARACTERISTIC_OFFSET.equals(characteristic.getUuid())) {
-            mGattServer.sendResponse(device,
-                    requestId,
-                    BluetoothGatt.GATT_SUCCESS,
-                    0,
-                    bytesFromInt(mTimeOffset));
+        if (UUID_CHARACTERISTIC_ELAPSED.equals(characteristicUuid)) {
+            mGattServer.sendResponse(device, requestId,
+                    BluetoothGatt.GATT_SUCCESS, 0, getStoredValue());
+        }else if (UUID_CHARACTERISTIC_OFFSET.equals(characteristicUuid)) {
+            mGattServer.sendResponse(device, requestId,
+                    BluetoothGatt.GATT_SUCCESS, 0, bytesFromInt(mTimeOffset));
         }
 
         /*
          * Always send a response back for any read request.
          */
-        mGattServer.sendResponse(device,
-                requestId,
-                BluetoothGatt.GATT_FAILURE,
-                0,
-                null);
+        mGattServer.sendResponse(device, requestId,
+                BluetoothGatt.GATT_FAILURE, 0, null);
     }
 
     @Override
@@ -148,19 +132,17 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
                                  boolean responseNeeded,
                                  int offset,
                                  byte[] value) {
+        final UUID characteristicUuid = characteristic.getUuid();
         Log.i(TAG, "onCharacteristicWriteRequest "
-                + characteristic.getUuid().toString());
+                + characteristicUuid.toString());
 
-        if (UUID_CHARACTERISTIC_OFFSET.equals(characteristic.getUuid())) {
+        if (UUID_CHARACTERISTIC_OFFSET.equals(characteristicUuid)) {
             int newOffset = unsignedIntFromBytes(value);
             setStoredValue(newOffset);
 
             if (responseNeeded) {
-                mGattServer.sendResponse(device,
-                        requestId,
-                        BluetoothGatt.GATT_SUCCESS,
-                        0,
-                        value);
+                mGattServer.sendResponse(device, requestId,
+                        BluetoothGatt.GATT_SUCCESS, 0, value);
             }
 
             mHandler.post(new Runnable() {
@@ -189,7 +171,7 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
                     mStatusListener.onDeviceDisconnected(device);
                 }
 
-                //Trigger our periodic notification once devices are connected
+                //Trigger our periodic notification once devices connect
                 mHandler.removeCallbacks(mNotifyRunnable);
                 if (!mConnectedDevices.isEmpty()) {
                     mHandler.post(mNotifyRunnable);
