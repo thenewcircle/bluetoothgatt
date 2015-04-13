@@ -1,4 +1,4 @@
-package com.example.android.bluetoothgatt;
+package com.example.android.bluetoothgatt.server;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -16,7 +16,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.android.bluetoothgatt.DeviceProfile.*;
+import static com.example.android.bluetoothgatt.TimerGattProfile.*;
 
 /*
  * Callback handles all incoming requests from GATT clients.
@@ -54,17 +54,17 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
         mGattServer = manager.openGattServer(context, this);
 
         BluetoothGattService service =
-                new BluetoothGattService(SERVICE_UUID,
+                new BluetoothGattService(UUID_SERVICE_TIMER,
                 BluetoothGattService.SERVICE_TYPE_PRIMARY);
 
         BluetoothGattCharacteristic elapsedCharacteristic =
-                new BluetoothGattCharacteristic(CHARACTERISTIC_ELAPSED_UUID,
+                new BluetoothGattCharacteristic(UUID_CHARACTERISTIC_ELAPSED,
                         //Read-only characteristic, supports notifications
                         BluetoothGattCharacteristic.PROPERTY_READ
                                 | BluetoothGattCharacteristic.PROPERTY_NOTIFY,
                         BluetoothGattCharacteristic.PERMISSION_READ);
         BluetoothGattCharacteristic offsetCharacteristic =
-                new BluetoothGattCharacteristic(CHARACTERISTIC_OFFSET_UUID,
+                new BluetoothGattCharacteristic(UUID_CHARACTERISTIC_OFFSET,
                         //Read+write permissions
                         BluetoothGattCharacteristic.PROPERTY_READ
                                 | BluetoothGattCharacteristic.PROPERTY_WRITE,
@@ -114,7 +114,7 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
         Log.i(TAG, "onCharacteristicReadRequest "
                 + characteristic.getUuid().toString());
 
-        if (CHARACTERISTIC_ELAPSED_UUID.equals(characteristic.getUuid())) {
+        if (UUID_CHARACTERISTIC_ELAPSED.equals(characteristic.getUuid())) {
             mGattServer.sendResponse(device,
                     requestId,
                     BluetoothGatt.GATT_SUCCESS,
@@ -122,7 +122,7 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
                     getStoredValue());
         }
 
-        if (CHARACTERISTIC_OFFSET_UUID.equals(characteristic.getUuid())) {
+        if (UUID_CHARACTERISTIC_OFFSET.equals(characteristic.getUuid())) {
             mGattServer.sendResponse(device,
                     requestId,
                     BluetoothGatt.GATT_SUCCESS,
@@ -151,7 +151,7 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
         Log.i(TAG, "onCharacteristicWriteRequest "
                 + characteristic.getUuid().toString());
 
-        if (CHARACTERISTIC_OFFSET_UUID.equals(characteristic.getUuid())) {
+        if (UUID_CHARACTERISTIC_OFFSET.equals(characteristic.getUuid())) {
             int newOffset = unsignedIntFromBytes(value);
             setStoredValue(newOffset);
 
@@ -211,8 +211,8 @@ public class TimeServerCallback extends BluetoothGattServerCallback {
     public void notifyConnectedDevices() {
         for (BluetoothDevice device : mConnectedDevices) {
             BluetoothGattCharacteristic readCharacteristic =
-                    mGattServer.getService(SERVICE_UUID)
-                    .getCharacteristic(CHARACTERISTIC_ELAPSED_UUID);
+                    mGattServer.getService(UUID_SERVICE_TIMER)
+                    .getCharacteristic(UUID_CHARACTERISTIC_ELAPSED);
             readCharacteristic.setValue(getStoredValue());
 
             mGattServer.notifyCharacteristicChanged(device,

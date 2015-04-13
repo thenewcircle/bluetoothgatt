@@ -7,20 +7,20 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.UUID;
 
-public class DeviceProfile {
+public class TimerGattProfile {
 
     /* Unique ids generated for this device by 'uuidgen'. Doesn't conform
      * to any SIG profile.
      */
 
-    //Service UUID to expose our time characteristics
-    public static UUID SERVICE_UUID =
+    //Service UUID to expose our timer characteristics
+    public static UUID UUID_SERVICE_TIMER =
             UUID.fromString("1706BBC0-88AB-4B8D-877E-2237916EE929");
     //Read-only characteristic providing number of seconds since offset
-    public static UUID CHARACTERISTIC_ELAPSED_UUID =
+    public static UUID UUID_CHARACTERISTIC_ELAPSED =
             UUID.fromString("275348FB-C14D-4FD5-B434-7C3F351DEA5F");
     //Read-write characteristic for current offset timestamp
-    public static UUID CHARACTERISTIC_OFFSET_UUID =
+    public static UUID UUID_CHARACTERISTIC_OFFSET =
             UUID.fromString("BD28E457-4026-4270-A99F-F9BC20182E15");
 
     public static String getStateDescription(int state) {

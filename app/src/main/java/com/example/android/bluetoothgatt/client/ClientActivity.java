@@ -1,15 +1,12 @@
-package com.example.android.bluetoothgatt;
+package com.example.android.bluetoothgatt.client;
 
 import android.app.Activity;
 import android.app.TimePickerDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
@@ -17,7 +14,6 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.ParcelUuid;
 import android.util.Log;
 import android.util.SparseArray;
@@ -28,7 +24,6 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import com.example.android.bluetoothgatt.DeviceProfile;
 import com.example.android.bluetoothgatt.R;
 
 import java.text.DateFormat;
@@ -37,7 +32,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import static com.example.android.bluetoothgatt.DeviceProfile.*;
+import static com.example.android.bluetoothgatt.TimerGattProfile.*;
 
 public class ClientActivity extends Activity
         implements TimeClientCallback.ClientStatusListener {
@@ -173,8 +168,8 @@ public class ClientActivity extends Activity
                             now.set(Calendar.MILLISECOND, 0);
 
                             BluetoothGattCharacteristic characteristic =
-                                    mConnectedGatt.getService(SERVICE_UUID)
-                                    .getCharacteristic(CHARACTERISTIC_OFFSET_UUID);
+                                    mConnectedGatt.getService(UUID_SERVICE_TIMER)
+                                    .getCharacteristic(UUID_CHARACTERISTIC_OFFSET);
                             int selected = (int) (now.getTimeInMillis() / 1000);
                             byte[] value = bytesFromInt(selected);
                             Log.d(TAG, "Writing value of size " + value.length);
@@ -193,8 +188,8 @@ public class ClientActivity extends Activity
     public void onGetOffsetClick(View v) {
         if (mConnectedGatt != null) {
             BluetoothGattCharacteristic characteristic = mConnectedGatt
-                    .getService(SERVICE_UUID)
-                    .getCharacteristic(CHARACTERISTIC_OFFSET_UUID);
+                    .getService(UUID_SERVICE_TIMER)
+                    .getCharacteristic(UUID_CHARACTERISTIC_OFFSET);
 
             mConnectedGatt.readCharacteristic(characteristic);
             mCurrentOffset.setText("---");
@@ -208,7 +203,7 @@ public class ClientActivity extends Activity
     private void startScan() {
         //Scan for devices advertising our custom service
         ScanFilter scanFilter = new ScanFilter.Builder()
-                .setServiceUuid(new ParcelUuid(SERVICE_UUID))
+                .setServiceUuid(new ParcelUuid(UUID_SERVICE_TIMER))
                 .build();
         ArrayList<ScanFilter> filters = new ArrayList<ScanFilter>();
         filters.add(scanFilter);

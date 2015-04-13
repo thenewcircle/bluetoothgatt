@@ -1,4 +1,4 @@
-package com.example.android.bluetoothgatt;
+package com.example.android.bluetoothgatt.client;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -9,7 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
-import static com.example.android.bluetoothgatt.DeviceProfile.*;
+import static com.example.android.bluetoothgatt.TimerGattProfile.*;
 
 /*
  * Callback handles GATT client events, such as results from
@@ -53,10 +53,10 @@ public class TimeClientCallback extends BluetoothGattCallback {
         for (BluetoothGattService service : gatt.getServices()) {
             Log.d(TAG, "Service: "+service.getUuid());
 
-            if (SERVICE_UUID.equals(service.getUuid())) {
+            if (UUID_SERVICE_TIMER.equals(service.getUuid())) {
                 //Read the current characteristic's value
                 gatt.readCharacteristic(service
-                        .getCharacteristic(CHARACTERISTIC_ELAPSED_UUID));
+                        .getCharacteristic(UUID_CHARACTERISTIC_ELAPSED));
             }
         }
     }
@@ -69,7 +69,7 @@ public class TimeClientCallback extends BluetoothGattCallback {
         final int charValue = characteristic
                 .getIntValue(BluetoothGattCharacteristic.FORMAT_UINT32, 0);
 
-        if (CHARACTERISTIC_ELAPSED_UUID.equals(characteristic.getUuid())) {
+        if (UUID_CHARACTERISTIC_ELAPSED.equals(characteristic.getUuid())) {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -81,7 +81,7 @@ public class TimeClientCallback extends BluetoothGattCallback {
             gatt.setCharacteristicNotification(characteristic, true);
         }
 
-        if (CHARACTERISTIC_OFFSET_UUID.equals(characteristic.getUuid())) {
+        if (UUID_CHARACTERISTIC_OFFSET.equals(characteristic.getUuid())) {
             Log.d(TAG, "Current time offset: "+charValue);
             mHandler.post(new Runnable() {
                 @Override
